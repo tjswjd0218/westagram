@@ -6,9 +6,11 @@ const app = express();
 require('dotenv').config();
 const { DataSource } = require('typeorm')
 const server = http.createServer(app);
+const morgan = require('morgan')
 
 app.use(cors());
-app.use(express.json())
+app.use(morgan('combined'));
+app.use(express.json());
 
 const appDataSource = new DataSource({
   type: process.env.DB_CONNECTION,
@@ -31,6 +33,20 @@ appDataSource.initialize()
 app.get('/ping', function (req, res) {
   res.status(200).json({ message: 'pong' })
 })
+
+app.post('/users', async (req, res) => {
+  const { name, email, profileImage, password } = req.body;
+  await appDataSource.query(
+    `INSERT INTO users (
+    name,
+    email,
+    profile_image,
+    password)
+    VALUES (?, ?, ?, ?)`,
+    [name, email, profileImage, password]
+  );
+  res.status(201).json({ message: 'userCreated' })
+});
 
 const PORT = process.env.PORT;
 
